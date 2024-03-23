@@ -7,37 +7,37 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.4'
-        channel: 'stable'
-    - run: flutter --version
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.4'
+          channel: 'stable'
+      - run: flutter --version
 
-#    - name: Cache pub dependencies
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ env.FLUTTER_HOME }}/.pub_cache
-#        key: ${{ runner.os }}
+  #    - name: Cache pub dependencies
+  #      uses: actions/cache@v2
+  #      with:
+  #        path: ${{ env.FLUTTER_HOME }}/.pub_cache
+  #        key: ${{ runner.os }}
 
-    - name: Get flutter dependencies
-      run: flutter pub get
+      - name: Get flutter dependencies
+        run: flutter pub get
 
-    - name: Run analyzer
-      run: flutter analyzer
+      - name: Run analyzer
+        run: flutter analyzer
 
-    - name: Run tests
-      run: flutter test
+      - name: Run tests
+        run: flutter test
 
-    - name: Build Web App
-      run: flutter build web
+      - name: Build Web App
+        run: flutter build web
 
-    - name: Deploye to github pages
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        folder: build/web
+      - name: Deploye to github pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build/web
     
