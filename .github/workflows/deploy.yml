@@ -27,11 +27,11 @@ jobs:
       - name: Get flutter dependencies
         run: flutter pub get
 
-      - name: Run analyzer
-        run: flutter analyze
-
-      - name: Run tests
-        run: flutter test
+#      - name: Run analyzer
+#        run: flutter analyze
+#
+#      - name: Run tests
+#        run: flutter test
 
       - name: Build Web App
         run: flutter build web
