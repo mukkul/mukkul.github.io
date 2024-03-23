@@ -48,6 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
               'Hello There! Thanks for visiting',
             ),
             Text('I am Abhishek Singh, Software Developer'),
+            Text('Email: abhishekvsingh1@gmail.com'),
+            Text('contact: 8446059660'),
           ],
         ),
       ), //This trailing comma makes auto-formatting nicer for build methods.
