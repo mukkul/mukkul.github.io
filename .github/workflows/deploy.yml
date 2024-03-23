@@ -28,7 +28,7 @@ jobs:
         run: flutter pub get
 
       - name: Run analyzer
-        run: flutter analyzer
+        run: flutter analyze
 
       - name: Run tests
         run: flutter test
@@ -36,7 +36,7 @@ jobs:
       - name: Build Web App
         run: flutter build web
 
-      - name: Deploye to github pages
+      - name: Deploy to github pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build/web
