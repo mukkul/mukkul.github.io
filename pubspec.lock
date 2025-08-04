@@ -144,6 +144,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "10.8.0"
+  form_validator:
+    dependency: "direct main"
+    description:
+      name: form_validator
+      sha256: "8cbe91b7d5260870d6fb9e23acd55d5d1d1fdf2397f0279a4931ac3c0c7bf8fb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
   go_router:
     dependency: "direct main"
     description:
@@ -281,7 +289,7 @@ packages:
     source: hosted
     version: "1.1.0"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"
@@ -360,6 +368,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5"
+  scroll_to_index:
+    dependency: "direct main"
+    description:
+      name: scroll_to_index
+      sha256: b707546e7500d9f070d63e5acf74fd437ec7eeeb68d3412ef7b0afada0b4f176
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   sky_engine:
     dependency: transitive
     description: flutter

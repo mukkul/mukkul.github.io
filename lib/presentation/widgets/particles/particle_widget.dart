@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'dart:math';
 import '../../../core/theme/app_theme.dart';
 
 class ParticleWidget extends StatefulWidget {
@@ -13,7 +14,7 @@ class _ParticleWidgetState extends State<ParticleWidget>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   final List<Particle> _particles = [];
-  final math.Random _random = math.Random();
+  final Random _random = Random();
 
   @override
   void initState() {
@@ -23,14 +24,14 @@ class _ParticleWidgetState extends State<ParticleWidget>
       vsync: this,
     )..repeat();
 
-    // Create particles
+    // Initialize particles
     for (int i = 0; i < 50; i++) {
       _particles.add(Particle(
-        x: _random.nextDouble(),
-        y: _random.nextDouble(),
+        x: _random.nextDouble() * 1000,
+        y: _random.nextDouble() * 1000,
         size: _random.nextDouble() * 3 + 1,
-        speed: _random.nextDouble() * 0.5 + 0.1,
-        opacity: _random.nextDouble() * 0.5 + 0.2,
+        speed: _random.nextDouble() * 2 + 0.5,
+        angle: _random.nextDouble() * 2 * math.pi,
       ));
     }
   }
@@ -63,15 +64,26 @@ class Particle {
   double y;
   final double size;
   final double speed;
-  final double opacity;
+  double angle;
 
   Particle({
     required this.x,
     required this.y,
     required this.size,
     required this.speed,
-    required this.opacity,
+    required this.angle,
   });
+
+  void update(double deltaTime) {
+    x += math.cos(angle) * speed * deltaTime;
+    y += math.sin(angle) * speed * deltaTime;
+    
+    // Wrap around screen
+    if (x < 0) x = 1000;
+    if (x > 1000) x = 0;
+    if (y < 0) y = 1000;
+    if (y > 1000) y = 0;
+  }
 }
 
 class ParticlePainter extends CustomPainter {
@@ -85,34 +97,20 @@ class ParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final particle in particles) {
-      // Update particle position
-      particle.y -= particle.speed * 0.01;
-      if (particle.y < -0.1) {
-        particle.y = 1.1;
-        particle.x = math.Random().nextDouble();
-      }
+    // Update particles
+    for (var particle in particles) {
+      particle.update(0.016); // 60 FPS
+    }
 
-      // Draw particle
+    // Draw particles
+    for (var particle in particles) {
       final paint = Paint()
-        ..color = AppTheme.primaryNeon.withOpacity(particle.opacity)
+        ..color = AppTheme.primaryNeon.withOpacity(0.3)
         ..style = PaintingStyle.fill;
 
-      final x = particle.x * size.width;
-      final y = particle.y * size.height;
+      final x = (particle.x / 1000) * size.width;
+      final y = (particle.y / 1000) * size.height;
 
-      // Draw glow effect
-      final glowPaint = Paint()
-        ..color = AppTheme.primaryNeon.withOpacity(particle.opacity * 0.3)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-
-      canvas.drawCircle(
-        Offset(x, y),
-        particle.size * 2,
-        glowPaint,
-      );
-
-      // Draw main particle
       canvas.drawCircle(
         Offset(x, y),
         particle.size,
@@ -120,25 +118,27 @@ class ParticlePainter extends CustomPainter {
       );
 
       // Draw connecting lines between nearby particles
-      for (final otherParticle in particles) {
+      for (var otherParticle in particles) {
         if (particle != otherParticle) {
           final distance = math.sqrt(
             math.pow(particle.x - otherParticle.x, 2) +
             math.pow(particle.y - otherParticle.y, 2),
           );
 
-          if (distance < 0.1) {
+          if (distance < 100) {
             final linePaint = Paint()
               ..color = AppTheme.secondaryNeon.withOpacity(0.1)
               ..strokeWidth = 1
               ..style = PaintingStyle.stroke;
 
+            final x1 = (particle.x / 1000) * size.width;
+            final y1 = (particle.y / 1000) * size.height;
+            final x2 = (otherParticle.x / 1000) * size.width;
+            final y2 = (otherParticle.y / 1000) * size.height;
+
             canvas.drawLine(
-              Offset(x, y),
-              Offset(
-                otherParticle.x * size.width,
-                otherParticle.y * size.height,
-              ),
+              Offset(x1, y1),
+              Offset(x2, y2),
               linePaint,
             );
           }
