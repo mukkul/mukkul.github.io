@@ -23,18 +23,42 @@ class _StarParticleWidgetState extends State<StarParticleWidget>
       vsync: this,
     )..repeat();
 
-    // Initialize star particles
-    _initializeParticles();
+    // Initialize with default particles - will be updated in didChangeDependencies
+    _initializeParticles(80, 1000, 1000); // Default desktop values
   }
 
-  void _initializeParticles() {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Reinitialize particles with proper screen size
+    final screenSize = MediaQuery.of(context).size;
+    final screenWidth = screenSize.width;
+    
+    int particleCount;
+    if (screenWidth < 768) {
+      // Mobile - fewer particles for performance
+      particleCount = 40;
+    } else if (screenWidth < 1024) {
+      // Tablet
+      particleCount = 60;
+    } else {
+      // Desktop
+      particleCount = 80;
+    }
+    
+    _initializeParticles(particleCount, screenSize.width, screenSize.height);
+  }
+
+  void _initializeParticles(int particleCount, double screenWidth, double screenHeight) {
     _particles.clear();
-    for (int i = 0; i < 80; i++) {
+    
+    for (int i = 0; i < particleCount; i++) {
       _particles.add(StarParticle(
-        x: _random.nextDouble() * 2000, // Wider range for better coverage
-        y: _random.nextDouble() * 2000, // Start from various heights
-        size: _random.nextDouble() * 4 + 1, // Size between 1-5
-        speed: _random.nextDouble() * 3 + 1, // Speed between 1-4
+        x: _random.nextDouble() * screenWidth,
+        y: _random.nextDouble() * screenHeight,
+        size: _random.nextDouble() * 3 + 1, // Size between 1-4
+        speed: _random.nextDouble() * 2 + 0.5, // Speed between 0.5-2.5
         twinkleSpeed: _random.nextDouble() * 0.05 + 0.02, // Twinkle speed
         opacity: _random.nextDouble() * 0.8 + 0.2, // Opacity between 0.2-1.0
         isDark: true, // Will be updated in build method
@@ -159,7 +183,7 @@ class StarParticlePainter extends CustomPainter {
 
     final outerRadius = size;
     final innerRadius = size * 0.4;
-    final numPoints = 5;
+    const numPoints = 5;
 
     final path = Path();
     

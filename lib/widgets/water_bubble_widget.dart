@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 
 class WaterBubbleWidget extends StatefulWidget {
   const WaterBubbleWidget({super.key});
@@ -23,9 +22,9 @@ class _WaterBubbleWidgetState extends State<WaterBubbleWidget>
   late List<Offset> _targetPositions;
   late List<double> _baseRadii;
   
-  final int _bubbleCount = 5; // Number of bubbles
-  final double _minRadius = 30.0;
-  final double _maxRadius = 150.0;
+  int _bubbleCount = 5; // Number of bubbles
+  double _minRadius = 30.0;
+  double _maxRadius = 100.0;
 
   @override
   void initState() {
@@ -60,7 +59,7 @@ class _WaterBubbleWidgetState extends State<WaterBubbleWidget>
     _radiusAnimations = List.generate(_bubbleCount, (index) => 
       Tween<double>(
         begin: _baseRadii[index] * 0.5,
-        end: _baseRadii[index] * 1.5,
+        end: _baseRadii[index] * 1.2,
       ).animate(CurvedAnimation(
         parent: _radiusControllers[index],
         curve: Curves.easeInOut,
@@ -94,16 +93,40 @@ class _WaterBubbleWidgetState extends State<WaterBubbleWidget>
 
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies();  
+    super.didChangeDependencies();
     
     // Initialize positions randomly now that context is available
     final screenSize = MediaQuery.of(context).size;
     final random = math.Random();
     
+    // Adjust bubble count and size based on screen size
+    final screenWidth = screenSize.width;
+    if (screenWidth < 768) {
+      // Mobile
+      _bubbleCount = 3;
+      _minRadius = 20.0;
+      _maxRadius = 60.0;
+    } else if (screenWidth < 1024) {
+      // Tablet
+      _bubbleCount = 4;
+      _minRadius = 25.0;
+      _maxRadius = 80.0;
+    } else {
+      // Desktop
+      _bubbleCount = 5;
+      _minRadius = 30.0;
+      _maxRadius = 100.0;
+    }
+    
+    // Reinitialize if bubble count changed
+    if (_currentPositions.length != _bubbleCount) {
+      _initializeBubbles();
+    }
+    
     for (int i = 0; i < _bubbleCount; i++) {
       _currentPositions[i] = Offset(
-        random.nextDouble() * (screenSize.width - 300) + 150,
-        random.nextDouble() * (screenSize.height - 300) + 150,
+        random.nextDouble() * (screenSize.width - 200) + 100,
+        random.nextDouble() * (screenSize.height - 200) + 100,
       );
       _targetPositions[i] = _currentPositions[i];
     }
@@ -136,6 +159,75 @@ class _WaterBubbleWidgetState extends State<WaterBubbleWidget>
 
   void _startPulseAnimation(int index) {
     _pulseControllers[index].repeat(reverse: true);
+  }
+
+  void _initializeBubbles() {
+    // Dispose existing controllers
+    for (int i = 0; i < _radiusControllers.length; i++) {
+      _radiusControllers[i].dispose();
+      _positionControllers[i].dispose();
+      _pulseControllers[i].dispose();
+    }
+    
+    // Reinitialize lists
+    _currentPositions = List.generate(_bubbleCount, (index) => const Offset(200, 200));
+    _targetPositions = List.generate(_bubbleCount, (index) => const Offset(200, 200));
+    _baseRadii = List.generate(_bubbleCount, (index) => 
+      _minRadius + (index * (_maxRadius - _minRadius) / (_bubbleCount - 1)));
+    
+    // Reinitialize animation controllers
+    _radiusControllers = List.generate(_bubbleCount, (index) => 
+      AnimationController(
+        duration: Duration(seconds: 1 + (index * 2)),
+        vsync: this,
+      ));
+    
+    _positionControllers = List.generate(_bubbleCount, (index) => 
+      AnimationController(
+        duration: Duration(milliseconds: 2000 + (index * 1000)),
+        vsync: this,
+      ));
+    
+    _pulseControllers = List.generate(_bubbleCount, (index) => 
+      AnimationController(
+        duration: Duration(milliseconds: 3000 + (index * 500)),
+        vsync: this,
+      ));
+    
+    // Reinitialize animations
+    _radiusAnimations = List.generate(_bubbleCount, (index) => 
+      Tween<double>(
+        begin: _baseRadii[index] * 0.5,
+        end: _baseRadii[index] * 1.5,
+      ).animate(CurvedAnimation(
+        parent: _radiusControllers[index],
+        curve: Curves.easeInOut,
+      )));
+    
+    _positionAnimations = List.generate(_bubbleCount, (index) => 
+      Tween<Offset>(
+        begin: _currentPositions[index],
+        end: _targetPositions[index],
+      ).animate(CurvedAnimation(
+        parent: _positionControllers[index],
+        curve: Curves.easeInOut,
+      )));
+    
+    _pulseAnimations = List.generate(_bubbleCount, (index) => 
+      Tween<double>(
+        begin: 0.8,
+        end: 1.2,
+      ).animate(CurvedAnimation(
+        parent: _pulseControllers[index],
+        curve: Curves.easeInOut,
+      )));
+    
+    // Restart animations
+    for (int i = 0; i < _bubbleCount; i++) {
+      _startRadiusAnimation(i);
+      _startPositionAnimation(i);
+      _startPulseAnimation(i);
+    }
   }
 
   void _generateNewTargetPosition(int index) {

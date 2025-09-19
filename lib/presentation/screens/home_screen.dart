@@ -174,8 +174,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           
           // Water bubble overlay - positioned on top of everything
-          Positioned.fill(
-            child: const WaterBubbleWidget(),
+          const Positioned.fill(
+            child: WaterBubbleWidget(),
           ),
         ],
       ),
@@ -214,64 +214,127 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildNavigationHeader(bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 24, 
+            vertical: isMobile ? 12 : 16,
+          ),
           decoration: BoxDecoration(
             color: isDark ? AppTheme.darkBg.withOpacity(0.8) : Colors.white.withOpacity(0.8),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  'AS',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  _buildNavButton('Home', 0, isDark),
-                  _buildNavButton('About', 1, isDark),
-                  _buildNavButton('Skills', 2, isDark),
-                  _buildNavButton('Technical Skills', 3, isDark),
-                  _buildNavButton('Experience', 4, isDark),
-                  _buildNavButton('Projects', 5, isDark),
-                  _buildNavButton('Education', 6, isDark),
-                  const SizedBox(width: 16),
-                  IconButton(
-                    onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
-                    icon: Icon(
-                      isDark ? Icons.light_mode : Icons.dark_mode,
-                      color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          child: isMobile ? _buildMobileNavigation(isDark) : _buildDesktopNavigation(isDark, isTablet),
         ),
       ),
     );
   }
 
-  Widget _buildNavButton(String text, int index, bool isDark) {
+  Widget _buildMobileNavigation(bool isDark) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Text(
+                'AS',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
+              icon: Icon(
+                isDark ? Icons.light_mode : Icons.dark_mode,
+                color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildNavButton('Home', 0, isDark, isMobile: true),
+              _buildNavButton('About', 1, isDark, isMobile: true),
+              _buildNavButton('Skills', 2, isDark, isMobile: true),
+              _buildNavButton('Tech', 3, isDark, isMobile: true),
+              _buildNavButton('Exp', 4, isDark, isMobile: true),
+              _buildNavButton('Projects', 5, isDark, isMobile: true),
+              _buildNavButton('Edu', 6, isDark, isMobile: true),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopNavigation(bool isDark, bool isTablet) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        FadeTransition(
+          opacity: _fadeAnimation,
+          child: Text(
+            'AS',
+            style: TextStyle(
+              fontSize: isTablet ? 28 : 32,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ),
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildNavButton('Home', 0, isDark),
+                _buildNavButton('About', 1, isDark),
+                _buildNavButton('Skills', 2, isDark),
+                _buildNavButton(isTablet ? 'Tech Skills' : 'Technical Skills', 3, isDark),
+                _buildNavButton('Experience', 4, isDark),
+                _buildNavButton('Projects', 5, isDark),
+                _buildNavButton('Education', 6, isDark),
+                const SizedBox(width: 16),
+                IconButton(
+                  onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
+                  icon: Icon(
+                    isDark ? Icons.light_mode : Icons.dark_mode,
+                    color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavButton(String text, int index, bool isDark, {bool isMobile = false}) {
     final bool isActive = _currentPage == index;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 4 : 8),
       child: TextButton(
         onPressed: () => _jumpToPage(index),
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 250),
           style: TextStyle(
+            fontSize: isMobile ? 14 : 16,
             color: isDark ? AppTheme.textPrimary : Colors.black,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
             shadows: isActive
@@ -290,8 +353,12 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildHeroSection(bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+    
     return SizedBox(
-      height: MediaQuery.of(context).size.height - 200,
+      height: MediaQuery.of(context).size.height - (isMobile ? 150 : 200),
       child: Center(
         child: SlideTransition(
           position: _slideAnimation,
@@ -306,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen>
                     TypewriterAnimatedText(
                       'Abhishek Singh',
                       textStyle: TextStyle(
-                        fontSize: 48,
+                        fontSize: isMobile ? 32 : (isTablet ? 40 : 48),
                         fontWeight: FontWeight.bold,
                         color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
                         fontFamily: 'monospace',
@@ -316,43 +383,43 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                   totalRepeatCount: 1,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isMobile ? 12 : 16),
                 
-                                          // Animated title
-                          AnimatedTextKit(
-                            animatedTexts: [
-                              FadeAnimatedText(
-                                'Senior Software Engineer',
-                                textStyle: TextStyle(
-                                  fontSize: 24,
-                                  color: isDark ? AppTheme.textSecondary : Colors.grey[700],
-                                  fontFamily: 'sans-serif',
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
-                              FadeAnimatedText(
-                                'Mobile App Developer',
-                                textStyle: TextStyle(
-                                  fontSize: 24,
-                                  color: isDark ? AppTheme.secondaryNeon : AppTheme.gradientEnd,
-                                  fontFamily: 'sans-serif',
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
-                              FadeAnimatedText(
-                                'Team Leader',
-                                textStyle: TextStyle(
-                                  fontSize: 24,
-                                  color: isDark ? AppTheme.accentNeon : AppTheme.gradientStart,
-                                  fontFamily: 'sans-serif',
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            ],
-                            repeatForever: true,
-                          ),
+                // Animated title
+                AnimatedTextKit(
+                  animatedTexts: [
+                    FadeAnimatedText(
+                      'Senior Software Engineer',
+                      textStyle: TextStyle(
+                        fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
+                        color: isDark ? AppTheme.textSecondary : Colors.grey[700],
+                        fontFamily: 'sans-serif',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                    FadeAnimatedText(
+                      'Mobile App Developer',
+                      textStyle: TextStyle(
+                        fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
+                        color: isDark ? AppTheme.secondaryNeon : AppTheme.gradientEnd,
+                        fontFamily: 'sans-serif',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                    FadeAnimatedText(
+                      'Team Leader',
+                      textStyle: TextStyle(
+                        fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
+                        color: isDark ? AppTheme.accentNeon : AppTheme.gradientStart,
+                        fontFamily: 'sans-serif',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  ],
+                  repeatForever: true,
+                ),
                 
-                const SizedBox(height: 32),
+                SizedBox(height: isMobile ? 24 : 32),
                 
                 // Resume download button
                 ScaleTransition(
@@ -360,53 +427,14 @@ class _HomeScreenState extends State<HomeScreen>
                   child: NeonButton(
                     text: 'Download Resume',
                     onPressed: _downloadResume,
-                    width: 200,
+                    width: isMobile ? 180 : 200,
                   ),
                 ),
 
-                const SizedBox(height: 48),
+                SizedBox(height: isMobile ? 32 : 48),
                 
                 // Contact info
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildContactItem(
-                      icon: Icons.phone,
-                      text: '8446059660',
-                      onTap: () async {
-                        final Uri phoneUri = Uri(scheme: 'tel', path: '8446059660');
-                        if (await canLaunchUrl(phoneUri)) {
-                          await launchUrl(phoneUri);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 16),
-                    _buildContactItem(
-                      icon: Icons.email,
-                      text: 'abhishekvsingh1@gmail.com',
-                      onTap: () async {
-                        final Uri emailUri = Uri(
-                          scheme: 'mailto',
-                          path: 'abhishekvsingh1@gmail.com',
-                        );
-                        if (await canLaunchUrl(emailUri)) {
-                          await launchUrl(emailUri);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 16),
-                    _buildContactItem(
-                      icon: FontAwesomeIcons.linkedin,
-                      text: 'LinkedIn',
-                      onTap: () async {
-                        const url = 'https://www.linkedin.com/in/abhishek-vinod-singh/';
-                        if (await canLaunchUrl(Uri.parse(url))) {
-                          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                        }
-                      },
-                    ),
-                  ],
-                ),
+                isMobile ? _buildMobileContactInfo(isDark) : _buildDesktopContactInfo(isDark),
               ],
             ),
           ),
@@ -904,6 +932,91 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
 
+
+  Widget _buildMobileContactInfo(bool isDark) {
+    return Column(
+      children: [
+        _buildContactItem(
+          icon: Icons.phone,
+          text: '8446059660',
+          onTap: () async {
+            final Uri phoneUri = Uri(scheme: 'tel', path: '8446059660');
+            if (await canLaunchUrl(phoneUri)) {
+              await launchUrl(phoneUri);
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildContactItem(
+          icon: Icons.email,
+          text: 'Email',
+          onTap: () async {
+            final Uri emailUri = Uri(
+              scheme: 'mailto',
+              path: 'abhishekvsingh1@gmail.com',
+            );
+            if (await canLaunchUrl(emailUri)) {
+              await launchUrl(emailUri);
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildContactItem(
+          icon: FontAwesomeIcons.linkedin,
+          text: 'LinkedIn',
+          onTap: () async {
+            const url = 'https://www.linkedin.com/in/abhishek-vinod-singh/';
+            if (await canLaunchUrl(Uri.parse(url))) {
+              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopContactInfo(bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildContactItem(
+          icon: Icons.phone,
+          text: '8446059660',
+          onTap: () async {
+            final Uri phoneUri = Uri(scheme: 'tel', path: '8446059660');
+            if (await canLaunchUrl(phoneUri)) {
+              await launchUrl(phoneUri);
+            }
+          },
+        ),
+        const SizedBox(width: 16),
+        _buildContactItem(
+          icon: Icons.email,
+          text: 'abhishekvsingh1@gmail.com',
+          onTap: () async {
+            final Uri emailUri = Uri(
+              scheme: 'mailto',
+              path: 'abhishekvsingh1@gmail.com',
+            );
+            if (await canLaunchUrl(emailUri)) {
+              await launchUrl(emailUri);
+            }
+          },
+        ),
+        const SizedBox(width: 16),
+        _buildContactItem(
+          icon: FontAwesomeIcons.linkedin,
+          text: 'LinkedIn',
+          onTap: () async {
+            const url = 'https://www.linkedin.com/in/abhishek-vinod-singh/';
+            if (await canLaunchUrl(Uri.parse(url))) {
+              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+            }
+          },
+        ),
+      ],
+    );
+  }
 
   Widget _buildContactItem({
     required IconData icon,
