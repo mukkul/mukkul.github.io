@@ -28,7 +28,7 @@ class _ScrollRevealAnimationState extends State<ScrollRevealAnimation>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  bool _isVisible = false;
+  final bool _isVisible = false;
 
   @override
   void initState() {

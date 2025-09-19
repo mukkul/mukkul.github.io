@@ -10,8 +10,9 @@ import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import '../widgets/animated_gradient_background.dart';
 import '../widgets/neon_button.dart';
-import '../widgets/particles/particle_widget.dart';
+import '../widgets/particles/star_particle_widget.dart';
 import '../widgets/scroll_reveal_animation.dart';
+import '../../widgets/water_bubble_widget.dart';
 import '../../services/resume_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -33,12 +34,22 @@ class _HomeScreenState extends State<HomeScreen>
   late AutoScrollController _scrollController;
   final List<GlobalKey> _sectionKeys = [];
   
+  // New: page controller for full-screen sections
+  late PageController _pageController;
+  int _currentPage = 0;
+  double _pageOffset = 0.0;
 
 
   @override
   void initState() {
     super.initState();
     _scrollController = AutoScrollController();
+    _pageController = PageController();
+    _pageController.addListener(() {
+      setState(() {
+        _pageOffset = _pageController.page ?? _currentPage.toDouble();
+      });
+    });
     
     // Initialize section keys
     for (int i = 0; i < 7; i++) {
@@ -93,14 +104,16 @@ class _HomeScreenState extends State<HomeScreen>
     _slideController.dispose();
     _scaleController.dispose();
     _scrollController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  void _scrollToSection(int index) {
-    _scrollController.scrollToIndex(
-      index,
+  void _jumpToPage(int page) {
+    setState(() => _currentPage = page);
+    _pageController.animateToPage(
+      page,
       duration: const Duration(milliseconds: 800),
-      preferPosition: AutoScrollPosition.begin,
+      curve: Curves.easeInOutCubic,
     );
   }
 
@@ -115,14 +128,22 @@ class _HomeScreenState extends State<HomeScreen>
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
 
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       body: Stack(
         children: [
-          // Animated background
-          const AnimatedGradientBackground(),
+          // Animated background with subtle parallax based on page offset
+          Transform.translate(
+            offset: Offset(0, -20 * (_pageOffset - _currentPage)),
+            child: const AnimatedGradientBackground(),
+          ),
           
-          // Particles effect
-          const ParticleWidget(),
+          // Star particles effect with upward movement (inverted rainfall)
+          Transform.translate(
+            offset: Offset(0, -40 * (_pageOffset - _currentPage)),
+            child: const StarParticleWidget(),
+          ),
           
           // Main content
           SafeArea(
@@ -131,100 +152,63 @@ class _HomeScreenState extends State<HomeScreen>
                 // Navigation header
                 _buildNavigationHeader(isDark),
                 
-                // Scrollable content
+                // Full-screen sections with PageView
                 Expanded(
-                  child: ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(24.0),
+                  child: PageView(
+                    controller: _pageController,
+                    scrollDirection: Axis.vertical,
+                    onPageChanged: (p) => setState(() => _currentPage = p),
                     children: [
-                      // Hero Section
-                      AutoScrollTag(
-                        key: _sectionKeys[0],
-                        index: 0,
-                        controller: _scrollController,
-                        child: _buildHeroSection(isDark),
-                      ),
-                      const SizedBox(height: 100),
-                      
-                      // About Section
-                      AutoScrollTag(
-                        key: _sectionKeys[1],
-                        index: 1,
-                        controller: _scrollController,
-                        child: ScrollRevealAnimation(
-                          child: _buildAboutSection(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                      
-                      // Skills Section
-                      AutoScrollTag(
-                        key: _sectionKeys[2],
-                        index: 2,
-                        controller: _scrollController,
-                        child: ScrollRevealAnimation(
-                          beginOffset: const Offset(50, 0),
-                          child: _buildSkillsSection(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                      
-                      // Technical Skills Section
-                      AutoScrollTag(
-                        key: _sectionKeys[3],
-                        index: 3,
-                        controller: _scrollController,
-                        child: ScrollRevealAnimation(
-                          beginOffset: const Offset(50, 0),
-                          child: _buildTechnicalSkillsSection(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                      
-                      // Experience Preview Section
-                      AutoScrollTag(
-                        key: _sectionKeys[4],
-                        index: 4,
-                        controller: _scrollController,
-                        child: ScrollRevealAnimation(
-                          beginOffset: const Offset(-50, 0),
-                          child: _buildExperiencePreviewSection(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                      
-                      // Projects Preview Section
-                      AutoScrollTag(
-                        key: _sectionKeys[5],
-                        index: 5,
-                        controller: _scrollController,
-                        child: ScrollRevealAnimation(
-                          beginOffset: const Offset(0, 100),
-                          child: _buildProjectsPreviewSection(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                      
-                      // Education Section
-                      AutoScrollTag(
-                        key: _sectionKeys[6],
-                        index: 6,
-                        controller: _scrollController,
-                        child: ScrollRevealAnimation(
-                          beginOffset: const Offset(0, 50),
-                          child: _buildEducationSection(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                      
-
+                      _viewportSection(child: _buildHeroSection(isDark), size: size),
+                      _viewportSection(child: ScrollRevealAnimation(child: _buildAboutSection(isDark)), size: size),
+                      _viewportSection(child: ScrollRevealAnimation(beginOffset: const Offset(50, 0), child: _buildSkillsSection(isDark)), size: size),
+                      _viewportSection(child: ScrollRevealAnimation(beginOffset: const Offset(50, 0), child: _buildTechnicalSkillsSection(isDark)), size: size),
+                      _viewportSection(child: ScrollRevealAnimation(beginOffset: const Offset(-50, 0), child: _buildExperiencePreviewSection(isDark)), size: size),
+                      _viewportSection(child: ScrollRevealAnimation(beginOffset: const Offset(0, 100), child: _buildProjectsPreviewSection(isDark)), size: size),
+                      _viewportSection(child: ScrollRevealAnimation(beginOffset: const Offset(0, 50), child: _buildEducationSection(isDark)), size: size),
                     ],
                   ),
                 ),
               ],
             ),
           ),
+          
+          // Water bubble overlay - positioned on top of everything
+          Positioned.fill(
+            child: const WaterBubbleWidget(),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _viewportSection({required Widget child, required Size size}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      child: SizedBox(
+        width: size.width,
+        height: size.height - 200,
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 600),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (c, anim) {
+              return FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.08),
+                    end: Offset.zero,
+                  ).animate(anim),
+                  child: c,
+                ),
+              );
+            },
+            child: child,
+          ),
+        ),
       ),
     );
   }
@@ -280,23 +264,33 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildNavButton(String text, int index, bool isDark) {
+    final bool isActive = _currentPage == index;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: TextButton(
-        onPressed: () => _scrollToSection(index),
-        child: Text(
-          text,
+        onPressed: () => _jumpToPage(index),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 250),
           style: TextStyle(
             color: isDark ? AppTheme.textPrimary : Colors.black,
-            fontWeight: FontWeight.w500,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            shadows: isActive
+                ? [
+                    Shadow(
+                      color: AppTheme.primaryNeon.withOpacity(0.7),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : null,
           ),
+          child: Text(text),
         ),
       ),
     );
   }
 
   Widget _buildHeroSection(bool isDark) {
-    return Container(
+    return SizedBox(
       height: MediaQuery.of(context).size.height - 200,
       child: Center(
         child: SlideTransition(
@@ -370,7 +364,6 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
 
-                
                 const SizedBox(height: 48),
                 
                 // Contact info
@@ -751,45 +744,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildProjectCard(String title, String tech, String description, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppTheme.primaryNeon.withOpacity(0.2) : AppTheme.gradientStart.withOpacity(0.2),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppTheme.textPrimary : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            tech,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? AppTheme.primaryNeon : AppTheme.gradientStart,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? AppTheme.textSecondary : Colors.black54,
-            ),
-          ),
-        ],
-      ),
+    return _InteractiveProjectCard(
+      title: title,
+      tech: tech,
+      description: description,
+      isDark: isDark,
     );
   }
 
@@ -982,6 +941,147 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InteractiveProjectCard extends StatefulWidget {
+  final String title;
+  final String tech;
+  final String description;
+  final bool isDark;
+
+  const _InteractiveProjectCard({
+    required this.title,
+    required this.tech,
+    required this.description,
+    required this.isDark,
+  });
+
+  @override
+  State<_InteractiveProjectCard> createState() => _InteractiveProjectCardState();
+}
+
+class _InteractiveProjectCardState extends State<_InteractiveProjectCard>
+    with SingleTickerProviderStateMixin {
+  bool _hovered = false;
+  late AnimationController _controller;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _anim = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = widget.isDark ? AppTheme.primaryNeon : AppTheme.gradientStart;
+    final surface = widget.isDark ? AppTheme.darkSurface : Colors.grey[50]!;
+
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() => _hovered = true);
+        _controller.forward();
+      },
+      onExit: (_) {
+        setState(() => _hovered = false);
+        _controller.reverse();
+      },
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(0, -6 * _anim.value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: borderColor.withOpacity(0.2 + 0.3 * _anim.value),
+                ),
+                boxShadow: _hovered
+                    ? [
+                        BoxShadow(
+                          color: borderColor.withOpacity(0.35),
+                          blurRadius: 18,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Stack(
+                children: [
+                  // Shimmering border overlay
+                  if (_hovered)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: AnimatedOpacity(
+                          opacity: 0.8,
+                          duration: const Duration(milliseconds: 200),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withOpacity(0.02),
+                                  borderColor.withOpacity(0.08),
+                                  Colors.white.withOpacity(0.02),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? AppTheme.textPrimary : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.tech,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: borderColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        widget.description,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: widget.isDark ? AppTheme.textSecondary : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
