@@ -31,7 +31,7 @@ class ResumeService {
     try {
       if (kIsWeb) {
         // Use the web-specific implementation
-        await ResumeServiceWeb.downloadResumeForWeb();
+        // await ResumeServiceWeb.downloadResumeForWeb();
       } else {
         // Fallback for non-web platforms
         const linkedinUrl = 'https://www.linkedin.com/in/abhishek-vinod-singh/';
