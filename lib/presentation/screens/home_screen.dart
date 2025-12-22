@@ -383,41 +383,6 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                   totalRepeatCount: 1,
                 ),
-                SizedBox(height: isMobile ? 12 : 16),
-                
-                // Animated title
-                AnimatedTextKit(
-                  animatedTexts: [
-                    FadeAnimatedText(
-                      'Senior Software Engineer',
-                      textStyle: TextStyle(
-                        fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
-                        color: isDark ? AppTheme.textSecondary : Colors.grey[700],
-                        fontFamily: 'sans-serif',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                    FadeAnimatedText(
-                      'Mobile App Developer',
-                      textStyle: TextStyle(
-                        fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
-                        color: isDark ? AppTheme.secondaryNeon : AppTheme.gradientEnd,
-                        fontFamily: 'sans-serif',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                    FadeAnimatedText(
-                      'Team Leader',
-                      textStyle: TextStyle(
-                        fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
-                        color: isDark ? AppTheme.accentNeon : AppTheme.gradientStart,
-                        fontFamily: 'sans-serif',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  ],
-                  repeatForever: true,
-                ),
                 
                 SizedBox(height: isMobile ? 24 : 32),
                 
